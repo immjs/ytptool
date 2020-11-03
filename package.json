@@ -1,0 +1,17 @@
+{
+  "name": "ytptool",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "InforMatheMusic",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "node-fetch": "^2.6.1",
+    "text-to-ipa": "^1.0.0",
+    "youtube-captions-scraper": "^1.0.3"
+  }
+}
