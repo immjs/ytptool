@@ -9,11 +9,18 @@
   "author": "InforMatheMusic",
   "license": "ISC",
   "dependencies": {
+    "@informath/text-to-ipa": "^1.0.0",
     "axios": "^0.21.0",
     "colors": "^1.4.0",
+    "command-line-args": "^5.1.1",
+    "command-line-usage": "^6.1.0",
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.1",
-    "text-to-ipa": "^1.0.0",
     "youtube-captions-scraper": "^1.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^7.12.1",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.1"
   }
 }
