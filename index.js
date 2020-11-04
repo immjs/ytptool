@@ -1,7 +1,8 @@
 require('dotenv').config();
 if(!process.env.YTGAPIKEY) process.exit(console.log(`Please add a .env file, put the following in:
-YGTAPIKEY=[[Your Youtube GAPI key]]`))
+YGTAPIKEY=[[Your Youtube GAPI key]]`));
 (async () => {
+  const colors = require('colors')
   const getSubtitles = require('youtube-captions-scraper').getSubtitles;
   const TextToIPA = require('text-to-ipa');
   const fetch = require('node-fetch')
@@ -17,6 +18,9 @@ YGTAPIKEY=[[Your Youtube GAPI key]]`))
       r(a)
     })
   })
+  String.prototype.trimPhonetics = (txt) => {
+    return txt.replace(/^[\sˈ]+/g,"");
+  }
   const cId = await ask("Channel ID")
   //const cId = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&forUsername=${encodeURIComponent(channel_name)}&key=${process.env.YTGAPIKEU}`)
   const response = await (await fetch(`https://www.googleapis.com/youtube/v3/search?order=date&part=snippet&channelId=${cId}&maxResults=25&key=${process.env.YTGAPIKEY}`)).json()
@@ -44,10 +48,11 @@ YGTAPIKEY=[[Your Youtube GAPI key]]`))
   }
   const meanStrLn = a => a.reduce((a, v) => +a + v.length, 0) / a.length
   const script = lookupPhrase(await ask("Script")).map(v => Array.isArray(v) ? v[0] : v).join(' ')
-  console.log("here")
+  console.log(`Expect ${script.underline.red}`)
+  let current=''
   for (let idx in ids) {
     const vId = ids[idx]
-    console.log(`video ${+idx+1} of ${ids.length}`)
+    //console.log(`Video ${+idx+1} of ${ids.length}`.black.bgWhite)
     try {
       let data = await getSubtitles({
         videoID: vId, // youtube video id
@@ -66,24 +71,33 @@ YGTAPIKEY=[[Your Youtube GAPI key]]`))
         }
         // console.log(v.text, v.phonetics, i, data.length)
       }
+      //console.log(`Scanned ${vId}! ${data.length} segments acquired`.green)
+      current+='o'
     } catch (err) {
-      if (err.message.includes('Could not find')) console.log(`Skipping ${vId}, no captions avail`)
-      else console.error(`Skipping ${vId}, unknown error`, err)
+      if (err.message.includes('Could not find')) current+='x'
+      else current+='X'
     }
+    process.stdout.write(`\r[${current.padEnd(25, ' ')}]`);
   }
+  console.log()
   let total = "";
   let finalData = found.sort((a, b) => (meanStrLn(b.foundIdtcl)) - (meanStrLn(a.foundIdtcl))).filter((v, i) => {
     let backup = total;
-    if (total.split('') == script.split('').filter((v, i, a) => a.indexOf(v) == i).sort()) return false
+    if (total == script.split('').filter((v, i, a) => a.indexOf(v) == i).sort().join('')) return false
     total += v.foundIdtcl.reduce((a, v) => a + v, '')
     total = total.split('').filter((v, i, a) => a.indexOf(v) == i).sort().join('')
     if (backup != total) foundHelpful.push(i)
     return true
-  }).filter((_, i) => foundHelpful.indexOf(i) != -1)
-  console.log(finalData)
-  finalData = finalData.map(v=>({
+  })
+  if(total != script.split('').filter((v, i, a) => a.indexOf(v) == i).sort().join('')) return console.log(`Not enough sample, leaving. Try with more videos.
+Expected: ${script.split('').filter((v, i, a) => a.indexOf(v) == i).sort().join('').bgGreen}
+Found:    ${total.bgRed}`)
+  finalData = finalData.filter((_, i) => foundHelpful.indexOf(i) != -1).map(v=>({
     ...v,
-    foundBiggest: v.v.phonetics.match(new RegExp(script.split('').map(v=>v+'?').join(''), 'g')).map(v=>v.trim()).filter(v=>!['', 'ˈ'].includes(v)&&!v.match(/^ +$/))
+    foundBiggest: v.v.phonetics.match(new RegExp(`(${script.split('').map(v=>v+'?').join('')})`, 'g')).map(v=>v.trim()).filter(v=>!['', 'ˈ'].includes(v)&&!v.match(/^ +$/)),
+    formatted: v.v.phonetics.replace(new RegExp(`(${script.split('').map(v=>v+'?').join('')})`, 'g'), '***$1***').replace(/\*\*\*(ˈ| +)?\*\*\*/g, '').split('***').map((v, i)=>i%2==0?v:`[${v.green}]`).join('')
   }))
-  console.log(...(finalData.map(v => [`https://youtube.com/watch?v=${v.vId}&t=${Math.floor(v.v.start)}`, v.foundIdtcl.reduce((a, v) => a.length < v.length ? v : a), v.v.phonetics, v.v.text, v.foundBiggest])))
+  finalData.map(v => [`https://youtube.com/watch?v=${v.vId}&t=${Math.floor(v.v.start)}`, v.v.phonetics, v.v.text, v.formatted]).forEach(v=>{
+    v.forEach(v1=>console.log(v1))
+  })
 })();

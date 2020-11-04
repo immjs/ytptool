@@ -9,6 +9,8 @@
   "author": "InforMatheMusic",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.21.0",
+    "colors": "^1.4.0",
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.1",
     "text-to-ipa": "^1.0.0",
