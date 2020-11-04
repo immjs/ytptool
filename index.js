@@ -1,4 +1,6 @@
 require('dotenv').config();
+if(!process.env.YTGAPIKEY) process.exit(console.log(`Please add a .env file, put the following in:
+YGTAPIKEY=[[Your Youtube GAPI key]]`))
 (async () => {
   const getSubtitles = require('youtube-captions-scraper').getSubtitles;
   const TextToIPA = require('text-to-ipa');
